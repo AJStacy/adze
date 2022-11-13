@@ -160,7 +160,15 @@ module.exports = {
         {
           title: 'Quick Start',
           collapsable: false,
-          children: ['', 'getting-started', 'modifying-logs', 'log-listeners'],
+          children: [
+            '',
+            'getting-started',
+            'modifying-logs',
+            'logger-configuration',
+            'environment-controls',
+            'global-context',
+            'log-listeners',
+          ],
         },
       ],
       '/guide/': [

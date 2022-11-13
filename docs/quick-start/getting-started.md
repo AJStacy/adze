@@ -46,7 +46,7 @@ try {
 }
 ```
 
-In our example we are now using the error severity. Also notice that we are passing a second argument into the error method just like we can do with the standard `console.error()` method.
+In our example we are now using the **error** severity. Also notice that we are passing a second argument into the error method just like we can do with the standard `console.error()` method.
 
 Also, notice in the table above that each log severity has a numbered level. This is important for setting what severity of logs we want printed within our environment. The severity you set will always include the number you set plus all levels that are lesser. For example, if I set my log severity to 3, info level logs will be printed, but so will warn, error, and alert levels because their level value is less than 3.
 
