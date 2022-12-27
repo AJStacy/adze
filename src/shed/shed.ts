@@ -11,6 +11,7 @@ import {
   FinalLogData,
   LogRender,
   Configuration,
+  FinalLabeledLogData,
 } from '../_contracts';
 import { Tools } from './Tools';
 import { Log } from '../log';
@@ -208,7 +209,11 @@ export class Shed {
    * Fires any listeners that are watching the log level defined in the provided log data. The log data
    * and render object will be passed to the listener callback.
    */
-  public fireListeners(log: FinalLogData<any>, render: LogRender | null, printed: boolean): void {
+  public fireListeners(
+    log: FinalLogData | FinalLabeledLogData,
+    render: LogRender | null,
+    printed: boolean
+  ): void {
     this.listeners.get(log.level)?.forEach((listener) => {
       listener(log, render, printed);
     });

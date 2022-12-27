@@ -1,4 +1,4 @@
-import { Log } from '../log';
+import { LabeledLog, Log } from '../log';
 import { LogLevelDefinition, ConsoleMethod, Defaults, LabelData } from '.';
 
 /**
@@ -58,27 +58,23 @@ export type LogRender = [ConsoleMethod, Arguments];
 /**
  * Type alias for an array of Log instances.
  */
-export type Collection = Log<Constraints>[];
+export type Collection = Array<Log<Constraints> | LabeledLog<Constraints>>;
 
 /**
  * Log data object generated from a Log instance. This is
  * primarily used for listeners and log cloning.
  */
-export interface LogData<C extends Constraints> {
+export interface LogData {
   args: unknown[] | null;
   assertion?: boolean;
   cfg: Defaults;
-  context: MetaData;
   definition: LogLevelDefinition | null;
   showTimestamp: boolean;
-  dumpContext: boolean;
   expression?: boolean;
   isSilent: boolean;
   printed: boolean;
-  label: LabelData;
   level: number | null;
   meta: MetaData;
-  modifierQueue: Array<(ctxt: Log<C>) => void>;
   namespace: string[] | null;
   stacktrace: string | null;
   timeNow: string | null;
@@ -90,7 +86,29 @@ export interface LogData<C extends Constraints> {
  * has been terminated. The values in this extended interface
  * reflect that they are no longer possibly null.
  */
-export interface FinalLogData<C extends Constraints> extends LogData<C> {
+export interface FinalLogData extends LogData {
+  level: number;
+  definition: LogLevelDefinition;
+  args: unknown[];
+  timestamp: LogTimestamp;
+}
+
+/**
+ * LabeledLog data object generated from a Log instance. This is
+ * primarily used for listeners and log cloning.
+ */
+export interface LabeledLogData extends LogData {
+  context: MetaData;
+  dumpContext: boolean;
+  label: LabelData;
+}
+
+/**
+ * LabeledLog data object generated from a Log instance after it
+ * has been terminated. The values in this extended interface
+ * reflect that they are no longer possibly null.
+ */
+export interface FinalLabeledLogData extends LabeledLogData {
   level: number;
   definition: LogLevelDefinition;
   args: unknown[];

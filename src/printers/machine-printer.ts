@@ -1,5 +1,11 @@
-import { stacktrace as getStacktrace } from '../util';
-import { ConsoleMethod, FinalLogData, LogRender, JsonOutput } from '../_contracts';
+import { stacktrace as getStacktrace, isFinalLabeledLogData } from '../util';
+import {
+  ConsoleMethod,
+  FinalLogData,
+  LogRender,
+  JsonOutput,
+  FinalLabeledLogData,
+} from '../_contracts';
 
 /**
  * This class is responsible for creating a Log Render that is
@@ -9,9 +15,9 @@ export class MachinePrinter {
   /**
    * Finalized log data object.
    */
-  private data: FinalLogData<any>;
+  private data: FinalLogData | FinalLabeledLogData;
 
-  constructor(data: FinalLogData<any>) {
+  constructor(data: FinalLogData | FinalLabeledLogData) {
     this.data = data;
   }
 
@@ -139,7 +145,7 @@ export class MachinePrinter {
    * Applies the label property to the output JSON based on the label currently set on the log.
    */
   private applyLabel(json: JsonOutput): JsonOutput {
-    return this.data.label.name ? { ...json, label: this.data.label.name } : json;
+    return isFinalLabeledLogData(this.data) ? { ...json, label: this.data.label.name } : json;
   }
 
   /**
@@ -155,7 +161,10 @@ export class MachinePrinter {
    * set on the log label object.
    */
   private applyCount(json: JsonOutput): JsonOutput {
-    return this.data.label.count !== null ? { ...json, count: this.data.label.count } : json;
+    if (isFinalLabeledLogData(this.data) && this.data.label.count !== null) {
+      return { ...json, count: this.data.label.count };
+    }
+    return json;
   }
 
   /**
@@ -163,9 +172,10 @@ export class MachinePrinter {
    * set on the log label object.
    */
   private applyTimeEllapsed(json: JsonOutput): JsonOutput {
-    return this.data.label.timeEllapsed
-      ? { ...json, timeEllapsed: this.data.label.timeEllapsed }
-      : json;
+    if (isFinalLabeledLogData(this.data) && this.data.label.timeElapsed) {
+      return { ...json, timeEllapsed: this.data.label.timeElapsed };
+    }
+    return json;
   }
 
   /**
@@ -181,9 +191,12 @@ export class MachinePrinter {
    * set on the log label object.
    */
   private applyContext(json: JsonOutput): JsonOutput {
-    return this.data.context && Object.keys(this.data.context).length > 0
-      ? { ...json, context: this.data.context }
-      : json;
+    if (isFinalLabeledLogData(this.data)) {
+      if (this.data.context && Object.keys(this.data.context).length > 0) {
+        return { ...json, context: this.data.context };
+      }
+    }
+    return json;
   }
 
   /**

@@ -45,7 +45,7 @@ test('prevents log from printing when the log level is lowered', (t) => {
   const terminated = adze({ logLevel: 5 }).log('testing');
   t.truthy(terminated.log);
   t.truthy(terminated.render);
-  t.falsy(terminated.printed);
+  t.false(terminated.printed);
 });
 
 test('prevents log from printing when in a test environment', (t) => {
@@ -53,7 +53,7 @@ test('prevents log from printing when in a test environment', (t) => {
   const terminated = adze().log('testing');
   t.truthy(terminated.log);
   t.truthy(terminated.render);
-  t.falsy(terminated.printed);
+  t.false(terminated.printed);
   global.ADZE_ENV = 'dev';
 });
 
@@ -95,15 +95,15 @@ test('hideAll global log filter prevents all logs printing', (t) => {
   const { printed: d_printed } = log().debug('This is a debug!');
   const { printed: v_printed } = log().verbose('This is a verbose!');
 
-  t.falsy(a_printed);
-  t.falsy(e_printed);
-  t.falsy(w_printed);
-  t.falsy(i_printed);
-  t.falsy(f_printed);
-  t.falsy(s_printed);
-  t.falsy(l_printed);
-  t.falsy(d_printed);
-  t.falsy(v_printed);
+  t.false(a_printed);
+  t.false(e_printed);
+  t.false(w_printed);
+  t.false(i_printed);
+  t.false(f_printed);
+  t.false(s_printed);
+  t.false(l_printed);
+  t.false(d_printed);
+  t.false(v_printed);
 });
 
 test('global filter excludes logs based on label', (t) => {
@@ -127,15 +127,15 @@ test('global filter excludes logs based on label', (t) => {
   const { printed: d_printed } = log().label('test2').debug('This is a debug!');
   const { printed: v_printed } = log().verbose('This is a verbose!');
 
-  t.truthy(a_printed);
-  t.falsy(e_printed);
-  t.truthy(w_printed);
-  t.falsy(i_printed);
-  t.truthy(f_printed);
-  t.truthy(s_printed);
-  t.falsy(l_printed);
-  t.falsy(d_printed);
-  t.truthy(v_printed);
+  t.true(a_printed);
+  t.false(e_printed);
+  t.true(w_printed);
+  t.false(i_printed);
+  t.true(f_printed);
+  t.true(s_printed);
+  t.false(l_printed);
+  t.false(d_printed);
+  t.true(v_printed);
 });
 
 test('global filter includes logs based on label', (t) => {
@@ -159,15 +159,15 @@ test('global filter includes logs based on label', (t) => {
   const { printed: d_printed } = log().label('test2').debug('This is a debug!');
   const { printed: v_printed } = log().verbose('This is a verbose!');
 
-  t.falsy(a_printed);
-  t.truthy(e_printed);
-  t.falsy(w_printed);
-  t.truthy(i_printed);
-  t.falsy(f_printed);
-  t.falsy(s_printed);
-  t.truthy(l_printed);
-  t.truthy(d_printed);
-  t.falsy(v_printed);
+  t.false(a_printed);
+  t.true(e_printed);
+  t.false(w_printed);
+  t.true(i_printed);
+  t.false(f_printed);
+  t.false(s_printed);
+  t.true(l_printed);
+  t.true(d_printed);
+  t.false(v_printed);
 });
 
 test('global filter excludes logs based on namespace', (t) => {
@@ -191,15 +191,15 @@ test('global filter excludes logs based on namespace', (t) => {
   const { printed: d_printed } = log().ns('test2').debug('This is a debug!');
   const { printed: v_printed } = log().verbose('This is a verbose!');
 
-  t.truthy(a_printed);
-  t.falsy(e_printed);
-  t.truthy(w_printed);
-  t.falsy(i_printed);
-  t.truthy(f_printed);
-  t.truthy(s_printed);
-  t.falsy(l_printed);
-  t.truthy(d_printed);
-  t.truthy(v_printed);
+  t.true(a_printed);
+  t.false(e_printed);
+  t.true(w_printed);
+  t.false(i_printed);
+  t.true(f_printed);
+  t.true(s_printed);
+  t.false(l_printed);
+  t.true(d_printed);
+  t.true(v_printed);
 });
 
 test('global filter includes logs based on namespace', (t) => {
@@ -223,13 +223,13 @@ test('global filter includes logs based on namespace', (t) => {
   const { printed: d_printed } = log().ns('test2').debug('This is a debug!');
   const { printed: v_printed } = log().verbose('This is a verbose!');
 
-  t.falsy(a_printed);
-  t.truthy(e_printed);
-  t.falsy(w_printed);
-  t.truthy(i_printed);
-  t.falsy(f_printed);
-  t.falsy(s_printed);
-  t.truthy(l_printed);
-  t.falsy(d_printed);
-  t.falsy(v_printed);
+  t.false(a_printed);
+  t.true(e_printed);
+  t.false(w_printed);
+  t.true(i_printed);
+  t.false(f_printed);
+  t.false(s_printed);
+  t.true(l_printed);
+  t.false(d_printed);
+  t.false(v_printed);
 });

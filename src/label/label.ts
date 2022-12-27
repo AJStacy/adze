@@ -25,29 +25,29 @@ export class Label {
   private _timeStart: [number, number] | null = null;
 
   /**
-   * Amount of time ellapsed between the calls of startTime()
+   * Amount of time elapsed between the calls of startTime()
    * and endTime() for this label.
    */
-  private _timeEllapsed: string | null;
+  private _timeElapsed: string | null;
 
   constructor(
     name: string,
     context: MetaData = {},
     count: number | null = null,
-    timeEllapsed: string | null = null
+    timeElapsed: string | null = null
   ) {
     this.name = name;
     this._context = context;
     this._count = count;
-    this._timeEllapsed = timeEllapsed;
+    this._timeElapsed = timeElapsed;
   }
 
   public get count(): number | null {
     return this._count;
   }
 
-  public get timeEllapsed(): string | null {
-    return this._timeEllapsed;
+  public get timeElapsed(): string | null {
+    return this._timeElapsed;
   }
 
   /**
@@ -109,11 +109,11 @@ export class Label {
 
   /**
    * Ends a previously started timer and records the
-   * time ellapsed.
+   * time elapsed.
    */
   public endTime(): void {
     if (this._timeStart) {
-      this._timeEllapsed = Label.formatTime(hrtime(this._timeStart));
+      this._timeElapsed = Label.formatTime(hrtime(this._timeStart));
     } else {
       console.warn('Adze: You cannot end a timer that has not been started.');
     }
@@ -134,7 +134,7 @@ export class Label {
   public get data(): LabelData {
     return {
       name: this.name,
-      timeEllapsed: this._timeEllapsed,
+      timeElapsed: this._timeElapsed,
       count: this._count,
     };
   }

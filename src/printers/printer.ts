@@ -1,8 +1,9 @@
-import { LogRender, FinalLogData } from '../_contracts';
+import { LogRender, FinalLogData, FinalLabeledLogData } from '../_contracts';
 import { Env } from '../env';
 import { BrowserPrinter } from './browser-printer';
 import { NodePrinter } from './node-printer';
 import { MachinePrinter } from './machine-printer';
+import { isFinalLabeledLogData } from '../util';
 
 export type PrinterMethods =
   | 'printLog'
@@ -19,9 +20,9 @@ export class Printer {
 
   private printer: BrowserPrinter | NodePrinter | MachinePrinter;
 
-  private data: FinalLogData<any>;
+  private data: FinalLogData | FinalLabeledLogData;
 
-  constructor(data: FinalLogData<any>) {
+  constructor(data: FinalLogData | FinalLabeledLogData) {
     this.data = data;
     this.printer = this.resolvePrinter();
   }
@@ -85,8 +86,10 @@ export class Printer {
    * dump modifier was used.
    */
   private attachContext(render: LogRender | null): LogRender | null {
-    if (render && this.data.dumpContext && !this.data.cfg.machineReadable) {
-      return [render[0], [...render[1], this.data.context]];
+    if (isFinalLabeledLogData(this.data)) {
+      if (render && this.data.dumpContext && !this.data.cfg.machineReadable) {
+        return [render[0], [...render[1], this.data.context]];
+      }
     }
     return render;
   }

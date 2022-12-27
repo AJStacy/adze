@@ -11,7 +11,7 @@ export type ListenerBuckets = Map<number, ListenerBucket>;
 export type ListenerBucket = Map<number, ListenerCallback>;
 
 export type ListenerCallback = (
-  LogData: LogData<any> | FinalLogData<any>,
+  LogData: LogData | FinalLogData,
   render: LogRender | null,
   printed: boolean
 ) => void;
@@ -26,7 +26,7 @@ export interface ShedUserConfig extends Partial<Omit<ShedConfig, 'globalCfg'>> {
 }
 
 export interface LabelData {
-  name: string | null;
-  timeEllapsed: string | null;
+  name: string;
+  timeElapsed: string | null;
   count: number | null;
 }

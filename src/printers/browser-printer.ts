@@ -1,9 +1,9 @@
 import { SharedPrinter } from './shared-printer';
-import { LogRender, FinalLogData } from '../_contracts';
-import { initialCaps } from '../util';
+import { LogRender, FinalLogData, FinalLabeledLogData } from '../_contracts';
+import { initialCaps, isFinalLabeledLogData } from '../util';
 
 export class BrowserPrinter extends SharedPrinter {
-  constructor(data: FinalLogData<any>) {
+  constructor(data: FinalLogData | FinalLabeledLogData) {
     super(data);
   }
 
@@ -134,10 +134,10 @@ export class BrowserPrinter extends SharedPrinter {
    * that have been applied to this log.
    */
   public fTime(): string {
-    const timeNow = this.data.timeNow;
-    const timeEllapsed = this.data.label?.timeEllapsed;
-    const labelTxt = `${timeNow ?? timeEllapsed ?? ''}`;
-
+    let labelTxt = this.data.timeNow ?? '';
+    if (isFinalLabeledLogData(this.data) && this.data.label.timeElapsed) {
+      labelTxt = this.data.label.timeElapsed;
+    }
     return labelTxt !== '' ? ` (${this.use_emoji ? '⏱' : ''}${labelTxt}) ` : '';
   }
 
@@ -146,8 +146,10 @@ export class BrowserPrinter extends SharedPrinter {
    * that have been applied to this log.
    */
   public fCount(): string {
-    const count = this.data.label.count;
-    return count !== null ? `(Count: ${count})` : '';
+    if (isFinalLabeledLogData(this.data) && this.data.label.count !== null) {
+      return `(Count: ${this.data.label.count})`;
+    }
+    return '';
   }
 
   /**
@@ -155,7 +157,10 @@ export class BrowserPrinter extends SharedPrinter {
    * modifier applied to this log.
    */
   public fLabel(): string {
-    return this.data.label.name ? `[${this.data.label.name}] ` : '';
+    if (isFinalLabeledLogData(this.data)) {
+      return `[${this.data.label.name}] `;
+    }
+    return '';
   }
 
   /**

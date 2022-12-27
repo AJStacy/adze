@@ -1,6 +1,6 @@
-import { LogRender, Collection, LogData, LevelFilter } from '../_contracts';
+import { LogRender, Collection, LogData, LevelFilter, LabeledLogData } from '../_contracts';
 import { Log } from '../log';
-import { formatLevels, isString } from '../util';
+import { formatLevels, isFinalLabeledLogData, isString } from '../util';
 
 /**
  * Filter a collection of logs by the namespace.
@@ -20,7 +20,12 @@ export function filterNamespace(collection: Collection = [], ns: string[]): Coll
  * Filter and render the collection of logs by the label.
  */
 export function filterLabel(collection: Collection = [], lbl: string): Collection {
-  return filterCollection(collection, (log) => log.label?.name === lbl);
+  return filterCollection(collection, (log) => {
+    if (isFinalLabeledLogData(log)) {
+      return log.label?.name === lbl;
+    }
+    return false;
+  });
 }
 
 /**
@@ -41,7 +46,7 @@ export function filterLevel(collection: Collection = [], levels: LevelFilter): C
  */
 export function filterCollection(
   collection: Collection,
-  cb: (log: LogData<any>) => boolean
+  cb: (log: LogData | LabeledLogData) => boolean
 ): Collection {
   return collection.reduce((acc, log) => {
     const result = cb(log.data);

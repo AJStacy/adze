@@ -1,13 +1,13 @@
-import { FinalLogData } from '../_contracts';
+import { FinalLabeledLogData, FinalLogData } from '../_contracts';
 import { Env } from '../env';
 import { isString } from '../util';
 
 export class SharedPrinter {
   protected env: Env = new Env();
 
-  protected data: FinalLogData<any>;
+  protected data: FinalLogData | FinalLabeledLogData;
 
-  constructor(data: FinalLogData<any>) {
+  constructor(data: FinalLogData | FinalLabeledLogData) {
     this.data = data;
   }
 

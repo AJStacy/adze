@@ -4,8 +4,9 @@ import {
   GlobalFilter,
   FilterFunction,
   FilterAllowedCallback,
+  FinalLabeledLogData,
 } from '../_contracts';
-import { formatLevels } from '../util';
+import { formatLevels, isFinalLabeledLogData } from '../util';
 
 // ----- FILTER FORMATTING ----- //
 
@@ -31,7 +32,7 @@ export function parseFilterLevels(cfg: Defaults): Defaults {
  * Validate that the current level set on the log is allowed based on
  * the filter rules.
  */
-export function levelAllowed(data: FinalLogData<any>): boolean {
+export function levelAllowed(data: FinalLogData | FinalLabeledLogData): boolean {
   return filterAllowed(data.cfg, 'level', (filter, func) => {
     const source = data.cfg.filters?.level?.[filter] ?? ([] as number[]);
     return func<number>(source, data.level);
@@ -42,11 +43,12 @@ export function levelAllowed(data: FinalLogData<any>): boolean {
  * Validate that the current label set on the log is allowed based on
  * the filter rules.
  */
-export function labelAllowed(data: FinalLogData<any>): boolean {
+export function labelAllowed(data: FinalLogData | FinalLabeledLogData): boolean {
   return filterAllowed(data.cfg, 'label', (filter, func) => {
-    if (filter === 'include' && data.label.name === null) {
-      // Do not include logs that do not have a label
-      return false;
+    // Check if this log has a label
+    if (!isFinalLabeledLogData(data)) {
+      // We want to exclude non-labeled logs if filter is set to "include"
+      return filter !== 'include';
     }
     const source = data.cfg.filters?.label?.[filter] ?? ([] as string[]);
     return func<string>(source, data.label.name ?? '');
@@ -57,7 +59,7 @@ export function labelAllowed(data: FinalLogData<any>): boolean {
  * Validate that at least one of the current namespaces set on the log
  * is allowed based on the filter rules.
  */
-export function namespaceAllowed(data: FinalLogData<any>): boolean {
+export function namespaceAllowed(data: FinalLogData | FinalLabeledLogData): boolean {
   return filterAllowed(data.cfg, 'namespace', (filter, func) => {
     const filter_ns = data.cfg.filters?.namespace?.[filter] ?? ([] as string[]);
 

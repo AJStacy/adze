@@ -1,4 +1,4 @@
-import { Defaults, FinalLogData, LogLevelDefinition } from '../_contracts';
+import { Defaults, FinalLabeledLogData, FinalLogData, LogLevelDefinition } from '../_contracts';
 import { levelAllowed, labelAllowed, namespaceAllowed } from '.';
 import { Env } from '../env';
 import { getSearchParams } from '../util';
@@ -6,7 +6,7 @@ import { getSearchParams } from '../util';
 /**
  * Determine the fate of whether this log will terminate.
  */
-export function allowed(data: FinalLogData<any>): boolean {
+export function allowed(data: FinalLogData | FinalLabeledLogData): boolean {
   return (
     levelActive(data.definition, data.cfg.logLevel) &&
     notTestEnv() &&
@@ -25,7 +25,7 @@ export function levelActive(def: LogLevelDefinition, level: number): boolean {
 /**
  * Validates the log against the configured filters.
  */
-export function passesFilters(cfg: Defaults, data: FinalLogData<any>): boolean {
+export function passesFilters(cfg: Defaults, data: FinalLogData | FinalLabeledLogData): boolean {
   return (
     !(cfg?.filters.hideAll ?? false) &&
     levelAllowed(data) &&
@@ -45,6 +45,6 @@ export function notTestEnv(): boolean {
   return (adze_env ?? param ?? '') !== 'test';
 }
 
-export function notSilent(data: FinalLogData<any>): boolean {
+export function notSilent(data: FinalLogData | FinalLabeledLogData): boolean {
   return data.isSilent === false;
 }

@@ -1,25 +1,5 @@
-import { LogData, FinalLogData, Constraints } from '../_contracts';
-
-/**
- * Type Guard to check if the given value is a String.
- */
-export function isString(val: unknown): val is string {
-  return typeof val === 'string';
-}
-
-/**
- * Type Guard to check if the given value is a String.
- */
-export function isNumber(val: unknown): val is number {
-  return typeof val === 'number';
-}
-
-/**
- * Type Guard to check if the given value is an Array.
- */
-export function isArray(val: unknown): val is [] {
-  return Array.isArray(val);
-}
+import { LogData, FinalLogData, FinalLabeledLogData, LabeledLogData } from '../_contracts';
+export { hasOwnProperty, isString, isNumber, isArray } from 'andrews-utils';
 
 /**
  * Type Guard that validates that the given value is not undefined.
@@ -31,11 +11,22 @@ export function isDefined<T>(val: T | undefined): val is T {
 /**
  * Type guard that indicates a log data object is finalized.
  */
-export function isFinalLogData<C extends Constraints>(
-  data: LogData<C> | FinalLogData<C>
-): data is FinalLogData<C> {
+export function isFinalLogData(data: LogData | FinalLogData): data is FinalLogData {
   return (
     data.level !== null && data.definition !== null && data.args !== null && data.timestamp !== null
+  );
+}
+
+export function isFinalLabeledLogData(
+  data: LogData | LabeledLogData | FinalLogData | FinalLabeledLogData
+): data is FinalLabeledLogData {
+  const _data = data as FinalLabeledLogData;
+  return (
+    _data.level !== null &&
+    _data.definition !== null &&
+    _data.args !== null &&
+    _data.timestamp !== null &&
+    _data?.label?.name !== undefined
   );
 }
 

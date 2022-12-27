@@ -22,11 +22,12 @@ import {
   cloneDeep,
   captureTimeNow,
 } from '../util';
-import { Label, addLabel, getLabel } from '../label';
 import { defaults } from '../_defaults';
 import { Env } from '../env';
 import { Printer } from '../printers';
 import { allowed, parseFilterLevels } from '../conditions';
+import { LabeledLog } from '.';
+import { addLabel, getLabel, Label } from '../label';
 
 export class Log<C extends Constraints> {
   /**
@@ -47,66 +48,55 @@ export class Log<C extends Constraints> {
   /**
    * The level of this log instance.
    */
-  private _level: number | null = null;
+  protected _level: number | null = null;
 
   /**
    * The log level definition selected for this log
    * after it has been terminated.
    */
-  private definition: LogLevelDefinition | null = null;
+  protected definition: LogLevelDefinition | null = null;
 
   /**
    * Arguments passed into a terminating method.
    */
-  private args: unknown[] | null = null;
+  protected args: unknown[] | null = null;
 
   /**
    * The log render after this log has been terminated.
    */
-  private _render: LogRender | null = null;
+  protected _render: LogRender | null = null;
 
   /**
    * The timestamp object generated when this log has been terminated.
    */
-  private _timestamp: LogTimestamp | null = null;
+  protected _timestamp: LogTimestamp | null = null;
 
   /**
    * The stacktrace of the log when it has been terminated.
    */
-  private stacktrace: string | null = null;
+  protected stacktrace: string | null = null;
 
   /**
    * The namespaces assigned to this log.
    */
-  private _namespaceVal: C['allowedNamespaces'][] | null = null;
+  protected _namespaceVal: C['allowedNamespaces'][] | null = null;
 
   /**
-   * The label instance assigned to this log.
+   * The time elapsed when this log was terminated.
    */
-  private _labelVal: Label | null = null;
-
-  /**
-   * The time ellapsed when this log was terminated.
-   */
-  private timeNowVal: string | null = null;
-
-  /**
-   * Queue of modifiers applied to this log instance.
-   * These will be executed in order when the log is terminated.
-   */
-  protected modifierQueue: Array<(ctxt: Log<C>) => void> = [];
+  protected timeNowVal: string | null = null;
 
   /**
    * The function used to generate a log render when
    * the log is terminated.
    */
-  private printer: PrintMethod = 'printLog';
+  protected printer: PrintMethod = 'printLog';
 
   /**
    * Meta data attached to this log instance through the
    * meta modifier. This is retrievable in log listeners.
    */
-  private metaData: MetaData = {};
+  protected metaData: MetaData = {};
 
   // ======================================
   //   Flags
@@ -118,7 +108,7 @@ export class Log<C extends Constraints> {
    * the log will print the provided message denoting
    * the failure of the assertion.
    */
-  private assertion: boolean | undefined;
+  protected assertion: boolean | undefined;
 
   /**
    * The result of the expression evaluated from
@@ -126,29 +116,23 @@ export class Log<C extends Constraints> {
    * the log will print the provided message denoting
    * the failure of the assertion.
    */
-  private expression: boolean | undefined;
+  protected expression: boolean | undefined;
 
   /**
    * Flag which tells the log instance to skip rendering.
    */
-  private isSilent = false;
+  protected isSilent = false;
 
   /**
    * Flag which indicates if the log is allowed to print to the console.
    */
-  private printed = false;
-
-  /**
-   * Flag which tells the log instance to add the
-   * MDC context to the log render arguments.
-   */
-  private dumpContext = false;
+  protected printed = false;
 
   /**
    * Flag which tells the log instance to render the
    * timestamp.
    */
-  private showTimestamp = false;
+  protected showTimestamp = false;
 
   constructor(printer: typeof Printer, env: Env, user_cfg?: Configuration) {
     this.Printer = printer;
@@ -183,13 +167,6 @@ export class Log<C extends Constraints> {
    */
   public get render(): LogRender | null {
     return this._render;
-  }
-
-  /**
-   * Getter shortcut for retrieving MDC context from the log instance.
-   */
-  public get context(): MetaData {
-    return this._labelVal?.getContext() ?? {};
   }
 
   // ======================================
@@ -344,71 +321,6 @@ export class Log<C extends Constraints> {
   }
 
   /**
-   * Following the MDC (Mapped Diagnostic Context) pattern this method enables you to create
-   * a thread for adding context from different scopes before finally terminating the log.
-   *
-   * In order to create a thread, this log must specify a label that will be used to link the
-   * context and your environment must have a **shed** created.
-   *
-   * **Example:**
-   * ```typescript
-   * import { adze, createShed } from 'adze';
-   *
-   * const shed = createShed();
-   *
-   * // Creating a shed listener is a great way to get meta data from your
-   * // threaded logs to write to disk or pass to another plugin, library,
-   * // or service.
-   * shed.addListener([1,2,3,4,5,6,7,8], (log) => {
-   *   // Do something with `log.context.added` or `log.context.subtracted`.
-   * });
-   *
-   * function add(a, b) {
-   *   const answer = a + b;
-   *   adze().label('foo').thread('added', { a, b, answer });
-   *   return answer;
-   * }
-   *
-   * function subtract(x, y) {
-   *   const answer = x - y;
-   *   adze().label('foo').thread('subtracted', { x, y, answer });
-   *   return answer;
-   * }
-   *
-   * add(1, 2);
-   * subtract(4, 3);
-   *
-   * adze().label('foo').dump.info('Results from our thread');
-   * // Info => Results from our thread, { a: 1, b: 2, answer: 3 }, { x: 4, y: 3, answer: 1 }
-   *
-   * ```
-   *
-   * This is a non-standard API.
-   */
-  public thread<T>(key: string, value: T): void {
-    // Check if the log has a label. If not, console.warn the user.
-    // If the log has a label, attach the context to the label.
-    this.runModifierQueue();
-    if (this._labelVal) {
-      this._labelVal.addContext(key, value);
-    } else {
-      console.warn('Thread context was not added! Threads must have a label.');
-    }
-  }
-
-  /**
-   * Closes a thread assigned to the log by clearing the context values.
-   *
-   * This is a non-standard API.
-   */
-  public close(): void {
-    this.runModifierQueue();
-    if (this._labelVal) {
-      this._labelVal.clearContext();
-    }
-  }
-
-  /**
    * Alias for console.clear().
    *
    * MDN API Docs [here](https://developer.mozilla.org/en-US/docs/Web/API/Console/clear)
@@ -446,57 +358,6 @@ export class Log<C extends Constraints> {
   // =============================
 
   /**
-   * Adds to the log count for log instances that share this log's label.
-   *
-   * MDN API Docs [here](https://developer.mozilla.org/en-US/docs/Web/API/Console/count)
-   */
-  public get count(): this {
-    return this.modifier((ctxt) => {
-      if (ctxt._labelVal) {
-        ctxt._labelVal.addCount();
-      }
-    });
-  }
-
-  /**
-   * Resets the count for the log instances that share this log's label.
-   *
-   * MDN API Docs [here](https://developer.mozilla.org/en-US/docs/Web/API/Console/countReset)
-   */
-  public get countReset(): this {
-    return this.modifier((ctxt) => {
-      if (ctxt._labelVal) {
-        ctxt._labelVal.resetCount();
-      }
-    });
-  }
-
-  /**
-   * Unsets the count for the log instances that share this log's label.
-   *
-   * This is a non-standard method.
-   */
-  public get countClear(): this {
-    return this.modifier((ctxt) => {
-      if (ctxt._labelVal) {
-        ctxt._labelVal.clearCount();
-      }
-    });
-  }
-
-  /**
-   * Instructs the log terminator to add the key/value pairs from the
-   * thread context to the console output.
-   *
-   * This is a non-standard API.
-   */
-  public get dump(): this {
-    return this.modifier((ctxt) => {
-      ctxt.dumpContext = true;
-    });
-  }
-
-  /**
    * Assign meta data to this log instance that is meant to be
    * retrievable in a log listener or from a `log.data()` dump.
    *
@@ -505,9 +366,8 @@ export class Log<C extends Constraints> {
   public meta<T>(key: string, val: T): this;
   public meta<KV extends [string, any]>(...[key, val]: KV): this;
   public meta(key: string, val: unknown): this {
-    return this.modifier((ctxt) => {
-      ctxt.metaData[key] = val;
-    });
+    this.metaData[key] = val;
+    return this;
   }
 
   /**
@@ -517,9 +377,8 @@ export class Log<C extends Constraints> {
    * MDN API Docs [here](https://developer.mozilla.org/en-US/docs/Web/API/Console/dir)
    */
   public get dir(): this {
-    return this.modifier((ctxt) => {
-      ctxt.printer = 'printDir';
-    });
+    this.printer = 'printDir';
+    return this;
   }
 
   /**
@@ -529,9 +388,8 @@ export class Log<C extends Constraints> {
    * MDN API Docs [here](https://developer.mozilla.org/en-US/docs/Web/API/Console/dirxml)
    */
   public get dirxml(): this {
-    return this.modifier((ctxt) => {
-      ctxt.printer = 'printDirxml';
-    });
+    this.printer = 'printDirxml';
+    return this;
   }
 
   /**
@@ -540,9 +398,8 @@ export class Log<C extends Constraints> {
    * MDN API Docs [here](https://developer.mozilla.org/en-US/docs/Web/API/Console/table)
    */
   public get table(): this {
-    return this.modifier((ctxt) => {
-      ctxt.printer = 'printTable';
-    });
+    this.printer = 'printTable';
+    return this;
   }
 
   /**
@@ -550,9 +407,8 @@ export class Log<C extends Constraints> {
    * prevent it from printing to the console.
    */
   public get silent(): this {
-    return this.modifier((ctxt) => {
-      ctxt.isSilent = true;
-    });
+    this.isSilent = true;
+    return this;
   }
 
   /**
@@ -561,9 +417,8 @@ export class Log<C extends Constraints> {
    * MDN API Docs [here](https://developer.mozilla.org/en-US/docs/Web/API/Console/group)
    */
   public get group(): this {
-    return this.modifier((ctxt) => {
-      ctxt.printer = 'printGroup';
-    });
+    this.printer = 'printGroup';
+    return this;
   }
 
   /**
@@ -572,9 +427,8 @@ export class Log<C extends Constraints> {
    * MDN API Docs [here](https://developer.mozilla.org/en-US/docs/Web/API/Console/groupCollapsed)
    */
   public get groupCollapsed(): this {
-    return this.modifier((ctxt) => {
-      ctxt.printer = 'printGroupCollapsed';
-    });
+    this.printer = 'printGroupCollapsed';
+    return this;
   }
 
   /**
@@ -583,9 +437,8 @@ export class Log<C extends Constraints> {
    * MDN API Docs [here](https://developer.mozilla.org/en-US/docs/Web/API/Console/groupEnd)
    */
   public get groupEnd(): this {
-    return this.modifier((ctxt) => {
-      ctxt.printer = 'printGroupEnd';
-    });
+    this.printer = 'printGroupEnd';
+    return this;
   }
 
   /**
@@ -595,11 +448,9 @@ export class Log<C extends Constraints> {
    * This is a non-standard API, but it replaces the need to provide
    * a label to `count` or `time`.
    */
-  public label(name: string): this {
-    return this.prependModifier((ctxt) => {
-      ctxt._labelVal = addLabel(getLabel(name) ?? new Label(name));
-      // console.log('Running label modifier!', ctxt);
-    });
+  public label(name: string): LabeledLog<C> {
+    const label = addLabel(getLabel(name) ?? new Label(name));
+    return new LabeledLog<C>(this.Printer, this.env, this.cfg, label);
   }
 
   /**
@@ -615,10 +466,9 @@ export class Log<C extends Constraints> {
     ns: C['allowedNamespaces'] | C['allowedNamespaces'][],
     ...rest: C['allowedNamespaces'][]
   ): this {
-    return this.modifier((ctxt) => {
-      const namespace = isString(ns) ? [ns, ...rest] : ns;
-      ctxt._namespaceVal = [...(ctxt._namespaceVal ?? []), ...namespace];
-    });
+    const namespace = isString(ns) ? [ns, ...rest] : ns;
+    this._namespaceVal = [...(this._namespaceVal ?? []), ...namespace];
+    return this;
   }
 
   /**
@@ -641,9 +491,8 @@ export class Log<C extends Constraints> {
    * MDN API Docs [here](https://developer.mozilla.org/en-US/docs/Web/API/Console/trace)
    */
   public get trace(): this {
-    return this.modifier((ctxt) => {
-      ctxt.printer = 'printTrace';
-    });
+    this.printer = 'printTrace';
+    return this;
   }
 
   /**
@@ -652,9 +501,8 @@ export class Log<C extends Constraints> {
    * MDN API Docs [here](https://developer.mozilla.org/en-US/docs/Web/API/console/assert)
    */
   public assert(assertion: boolean): this {
-    return this.modifier((ctxt) => {
-      ctxt.assertion = assertion;
-    });
+    this.assertion = assertion;
+    return this;
   }
 
   /**
@@ -663,23 +511,8 @@ export class Log<C extends Constraints> {
    * This is a non-standard method.
    */
   public test(expression: boolean): this {
-    return this.modifier((ctxt) => {
-      ctxt.expression = expression;
-    });
-  }
-
-  /**
-   * Starts a timer associated with this log's *label*. This will do nothing if
-   * this log has no label.
-   *
-   * MDN API Docs [here](https://developer.mozilla.org/en-US/docs/Web/API/Console/time).
-   */
-  public get time(): this {
-    return this.modifier((ctxt) => {
-      if (ctxt._labelVal) {
-        ctxt._labelVal.startTime();
-      }
-    });
+    this.expression = expression;
+    return this;
   }
 
   /**
@@ -688,33 +521,9 @@ export class Log<C extends Constraints> {
    * This is a non-standard method.
    */
   public get timeNow(): this {
-    return this.modifier((ctxt) => {
-      ctxt.timeNowVal = captureTimeNow();
-    });
+    this.timeNowVal = captureTimeNow();
+    return this;
   }
-
-  /**
-   * Stops a timer that was previously started by calling time() on a *labeled* log. Calculates the
-   * difference between the start time and when this method was called. This then
-   * modifies the log render to show the time difference. This will do nothing if the *label* does
-   * not exist.
-   *
-   * MDN API Docs [here](https://developer.mozilla.org/en-US/docs/Web/API/Console/timeEnd).
-   */
-  public get timeEnd(): this {
-    return this.modifier((ctxt) => {
-      if (ctxt._labelVal) {
-        ctxt._labelVal.endTime();
-      }
-    });
-  }
-
-  /*
-    ! console.timeLog() is purposefully omitted from this API.
-
-    timeLog() is a useless method within the Adze API. The same effect can be 
-    accomplished by created a new log with the same label.
-  */
 
   /**
    * This modifier method tells the log to render a timestamp.
@@ -722,37 +531,8 @@ export class Log<C extends Constraints> {
    * This is a non-standard API.
    */
   public get timestamp(): this {
-    return this.modifier((ctxt) => {
-      ctxt.showTimestamp = true;
-    });
-  }
-
-  // ==============================
-  //   Private Methods
-  // ==============================
-
-  /**
-   * Queues a modifier method for execution when the log is terminated.
-   */
-  private modifier(func: (ctxt: Log<C>) => void): this {
-    this.modifierQueue = this.modifierQueue.concat([func]);
+    this.showTimestamp = true;
     return this;
-  }
-
-  /**
-   * Queues a modifier method for execution at the beginning of the queue when the log is terminated.
-   * This is used to ensure that labels are applied before modifiers that use labels are executed.
-   */
-  private prependModifier(func: (ctxt: Log<C>) => void): this {
-    this.modifierQueue = [func].concat(this.modifierQueue);
-    return this;
-  }
-
-  /**
-   * Executes all of the log modifier functions within the queue.
-   */
-  private runModifierQueue(): void {
-    this.modifierQueue.forEach((func) => func(this));
   }
 
   // ===================================
@@ -790,9 +570,6 @@ export class Log<C extends Constraints> {
    */
   private terminate(def: LogLevelDefinition | undefined, args: unknown[]): TerminatedLog<C, this> {
     if (def) {
-      // Apply modifiers in the proper order.
-      this.runModifierQueue();
-
       // Save values to this log instance for later recall
       this.args = args;
       this._level = def.level;
@@ -866,7 +643,7 @@ export class Log<C extends Constraints> {
   /**
    * Fires listeners for this log instance if a Shed exists.
    */
-  private fireListeners(data: FinalLogData<C>, render: LogRender | null, printed: boolean): void {
+  private fireListeners(data: FinalLogData, render: LogRender | null, printed: boolean): void {
     const shed = this.env.global.$shed;
     if (shedExists(shed)) {
       shed.fireListeners(data, render, printed);
@@ -880,8 +657,8 @@ export class Log<C extends Constraints> {
   /**
    * Creates a slimmed down object comprised of data from a log.
    */
-  public get data(): LogData<C> | FinalLogData<C> {
-    const values: LogData<C> = {
+  public get data(): LogData | FinalLogData {
+    const values: LogData = {
       cfg: cloneDeep(this.cfg),
       level: this._level,
       definition: this.definition ? { ...this.definition } : null,
@@ -889,21 +666,13 @@ export class Log<C extends Constraints> {
       timestamp: this._timestamp ? { ...this._timestamp } : null,
       stacktrace: this.stacktrace,
       namespace: this._namespaceVal ? [...this._namespaceVal] : null,
-      label: {
-        name: this._labelVal?.name ?? null,
-        timeEllapsed: this._labelVal?.timeEllapsed ?? null,
-        count: this._labelVal?.count ?? null,
-      },
       assertion: this.assertion,
       expression: this.expression,
-      dumpContext: this.dumpContext,
       isSilent: this.isSilent,
       printed: this.printed,
       showTimestamp: this.showTimestamp,
       timeNow: this.timeNowVal,
       meta: { ...this.metaData },
-      context: { ...this.context },
-      modifierQueue: [...this.modifierQueue],
     };
     return values;
   }
@@ -911,7 +680,7 @@ export class Log<C extends Constraints> {
   /**
    * Hydrate this log's properties from a log data object.
    */
-  public hydrate(data: LogData<C> | FinalLogData<C>): this {
+  public hydrate(data: LogData | FinalLogData): this {
     this.cfg = cloneDeep(data.cfg);
     this._level = data.level;
     this.definition = data.definition ? { ...data.definition } : null;
@@ -919,33 +688,14 @@ export class Log<C extends Constraints> {
     this._timestamp = data.timestamp ? { ...data.timestamp } : null;
     this.stacktrace = data.stacktrace;
     this._namespaceVal = data.namespace ? [...data.namespace] : null;
-    this._labelVal = this.resolveLabel(data);
     this.assertion = data.assertion;
     this.expression = data.expression;
-    this.dumpContext = data.dumpContext;
     this.isSilent = data.isSilent;
     this.printed = data.printed;
     this.showTimestamp = data.showTimestamp;
     this.timeNowVal = data.timeNow;
     this.metaData = { ...data.meta };
-    this.modifierQueue = [...data.modifierQueue];
 
     return this;
-  }
-
-  /**
-   * Returns the label from the store if it exists by the given name.
-   * If it's not in the store, generate a new log with the provided data
-   * properties. If the label name is null in the data, return null.
-   */
-  private resolveLabel(data: LogData<C> | FinalLogData<C>): Label | null {
-    if (data.label.name) {
-      const stored_label = getLabel(data.label.name) ?? null;
-      if (stored_label) {
-        return stored_label;
-      }
-      return new Label(data.label.name, data.context, data.label.count, data.label.timeEllapsed);
-    }
-    return null;
   }
 }

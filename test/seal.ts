@@ -4,7 +4,7 @@ import adze, { createShed, removeShed } from '../src';
 // Our global context is the window not global
 global.ADZE_ENV = 'dev';
 
-test('sealing a log preserves configuration but creates new log instances', (t) => {
+test.skip('sealing a log preserves configuration but creates new log instances', (t) => {
   const sealed = adze().label('test').ns(['test1', 'test2']).seal();
   const { log: log1, render: render1 } = sealed().log('Log #1');
   const { log: log2, render: render2 } = sealed().info('Log #2');
