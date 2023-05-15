@@ -1,25 +1,19 @@
 ---
 layout: Home
 home: true
-heroImage: /logo.svg
-heroText: A Library for Shaping Your Logs
-tagline: Open the dev console for a demo
-actionText: Quick Start →
-actionLink: /guide/
-features:
-  - title: Chainable API
-    image: /chainsaw.svg
-    imageId: chainsaw
-    details: Write your logs as a chain of methods.
-  - title: Fully Configurable
-    image: /lumberjack-bust.svg
-    imageId: lumberjack-bust
-    details: Every aspect of Adze is under your control.
-  - title: Log Listeners
-    image: /logs-small.svg
-    imageId: logs-small
-    details: Log listeners give you control of your data.
+quickStartText: Quick Start →
+quickStartLink: /guide/
+guideText: Guide
+guideLink: /guide/
 ---
+
+::: slot getting-started-is-easy
+
+## Getting Started is Easy
+
+Adze is built with TypeScript from the ground up. Take advantage of all of the benefits of
+using TypeScript with your app's logs.
+:::
 
 ::: slot typescript-support
 

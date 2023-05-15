@@ -1,68 +1,18 @@
 <template>
-  <main
-    :aria-labelledby="data.heroText !== null ? 'main-title' : null"
-    class="theme-container"
-  >
-    <div class="home-container">
-      <header class="hero">
-        <img
-          v-if="data.heroImage"
-          :src="$withBase(data.heroImage)"
-          :alt="data.heroAlt || 'hero'"
-        />
+  <main :aria-labelledby="data.heroText !== null ? 'main-title' : null" class="theme-container">
+    <hero />
 
-        <h1 v-if="data.heroText !== null" id="main-title">
-          {{ data.heroText || $title || 'Hello' }}
-        </h1>
-
-        <p v-if="data.tagline !== null" class="description">
-          {{ data.tagline || $description || 'Welcome to your VuePress site' }}
-        </p>
-
-        <p v-if="data.actionText && data.actionLink" class="action">
-          <iframe
-            src="https://ghbtns.com/github-btn.html?user=AJStacy&repo=adze&type=star&count=true&size=large"
-            frameborder="0"
-            scrolling="0"
-            width="115"
-            height="30"
-            title="GitHub"
-          ></iframe
-          >&nbsp;&nbsp;&nbsp;
-          <iframe
-            src="https://ghbtns.com/github-btn.html?user=AJStacy&repo=adze&type=watch&count=true&size=large&v=2"
-            frameborder="0"
-            scrolling="0"
-            width="128"
-            height="30"
-            title="GitHub"
-          ></iframe
-          >&nbsp;&nbsp;&nbsp;
-          <iframe
-            src="https://ghbtns.com/github-btn.html?user=AJStacy&repo=adze&type=fork&count=true&size=large"
-            frameborder="0"
-            scrolling="0"
-            width="115"
-            height="30"
-            title="GitHub"
-          ></iframe
-          ><br /><br />
-          <nav-link class="action-button" :item="actionLink" />
-        </p>
-      </header>
-
-      <div v-if="data.features && data.features.length" class="features">
-        <div
-          v-for="(feature, index) in data.features"
-          :key="index"
-          class="feature"
-        >
-          <h2>{{ feature.title }}</h2>
-          <img :src="feature.image" :id="feature.imageId" />
-          <p>{{ feature.details }}</p>
-        </div>
+    <!-- Getting Started is Easy -->
+    <div class="full-width-container alt-bg">
+      <div class="content-container">
+        <section class="content-block no-border centered">
+          <div class="content">
+            <Content slot-key="getting-started-is-easy" />
+          </div>
+        </section>
       </div>
     </div>
+
     <div class="content-container">
       <!-- TypeScript -->
       <section class="content-block">
@@ -95,10 +45,7 @@
       <div class="content-container">
         <section class="content-block no-border centered">
           <div class="image">
-            <img
-              :src="$withBase('/lumber-scene-1.svg')"
-              style="width: 100%; max-height: 300px"
-            />
+            <img :src="$withBase('/lumber-scene-1.svg')" style="width: 100%; max-height: 300px" />
           </div>
           <div class="content">
             <Content slot-key="everything-configurable" />
@@ -112,10 +59,7 @@
       <!-- Chainable API -->
       <section class="content-block no-border">
         <div class="image">
-          <img
-            :src="$withBase('/truck-loaded.svg')"
-            style="max-height: 200px"
-          />
+          <img :src="$withBase('/truck-loaded.svg')" style="max-height: 200px" />
         </div>
         <div class="content">
           <Content slot-key="typescript-support" />
@@ -141,10 +85,7 @@
       <div class="content-container">
         <section class="content-block no-border">
           <div class="image">
-            <img
-              :src="$withBase('/shaped-wood.svg')"
-              style="max-height: 150px"
-            />
+            <img :src="$withBase('/shaped-wood.svg')" style="max-height: 150px" />
           </div>
           <div class="content">
             <Content slot-key="learn-more" />
@@ -166,6 +107,7 @@
 </template>
 
 <script>
+import Hero from './Hero.vue';
 import NavLink from '@theme/components/NavLink.vue';
 
 export default {
@@ -173,6 +115,7 @@ export default {
 
   components: {
     'nav-link': NavLink,
+    Hero,
   },
 
   computed: {
@@ -250,23 +193,6 @@ export default {
   border-bottom 1px solid darken($accentColor, 10%)
   &:hover
     background-color lighten($accentColor, 10%)
-
-.hero
-  text-align center
-  img
-    max-width: 100%
-    max-height 280px
-    display block
-    margin 3rem auto 1.5rem
-  h1
-    font-size 3rem
-  h1, .description, .action
-    margin 1.8rem auto
-  .description
-    max-width 35rem
-    font-size 1.6rem
-    line-height 1.3
-    color lighten($textColor, 40%)
 
 .features
   border-top 1px solid $borderColor
