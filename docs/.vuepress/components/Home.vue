@@ -3,9 +3,9 @@
     <hero />
 
     <!-- Getting Started is Easy -->
-    <div class="full-width-container alt-bg">
-      <div class="content-container">
-        <section class="content-block no-border centered">
+    <div class="full-width-container alt-bg-fade half-height">
+      <div class="content-container box">
+        <section class="content-block no-border centered no-padding">
           <div class="content">
             <Content slot-key="getting-started-is-easy" />
           </div>
@@ -15,22 +15,46 @@
 
     <div class="content-container">
       <!-- TypeScript -->
-      <section class="content-block">
+      <section class="content-block no-border">
         <div class="image">
-          <img :src="$withBase('/trees-1.svg')" style="max-height: 200px" />
+          <img
+            :src="$withBase('/hero.svg')"
+            alt="An isometric illustration of a node server and a web browser among trees"
+            style="max-height: 240px"
+          />
+          <!-- <img :src="$withBase('/trees-1.svg')" /> -->
         </div>
         <div class="content">
           <Content slot-key="browser-and-node" />
+
+          <div class="great-with">
+            <div><h3>Works great with</h3></div>
+            <div>
+              <a href="https://nextjs.org/" target="_blank">
+                <img :src="$withBase('/next-logo.png')" alt="NextJS" />
+              </a>
+            </div>
+            <div>
+              <a href="https://nuxt.com/" target="_blank">
+                <img :src="$withBase('/nuxt-logo.png')" alt="NuxtJS" />
+              </a>
+            </div>
+            <div>
+              <a href="https://kit.svelte.dev/">
+                <img :src="$withBase('/sveltekit-logo.png')" alt="SvelteKit" />
+              </a>
+            </div>
+          </div>
         </div>
       </section>
 
       <!-- Chainable API -->
       <section class="content-block left">
         <div class="image">
-          <img :src="$withBase('/chainsaw.svg')" style="max-height: 150px" />
+          <img :src="$withBase('/truck-loaded-with-lumberjack.svg')" style="max-height: 250px" />
         </div>
         <div class="content">
-          <Content slot-key="chainable-api" />
+          <Content slot-key="human-machine-readable" />
           <!-- <h2>A Fluent, Chainable API</h2>
           <p>
             Writing your logs should feel natural which is why Adze chose to implement a chainable
@@ -91,7 +115,7 @@
             <Content slot-key="learn-more" />
             <br />
             <p class="action">
-              <nav-link class="action-button" :item="actionLink" />
+              <nav-link class="action-button" :item="quickStartLink" />
             </p>
           </div>
         </section>
@@ -123,10 +147,10 @@ export default {
       return this.$page.frontmatter;
     },
 
-    actionLink() {
+    quickStartLink() {
       return {
-        link: this.data.actionLink,
-        text: this.data.actionText,
+        link: this.data.quickStartLink,
+        text: this.data.quickStartText,
       };
     },
   },
@@ -234,10 +258,31 @@ export default {
   padding-left 40px
   padding-right 40px
 
+  &.box
+    position: relative;
+    height: 50%;
+    bottom: -250px;
+    background: $white
+    border: 1px solid rgba(239,239,239,1)
+
 .full-width-container
   padding 40px 20px
   &.alt-bg
     background-color $altBgColor
+  &.alt-bg-fade
+    background rgb(239,239,239)
+    background linear-gradient(0deg, rgba(239,239,239,1) 30%, transparent 70%)
+  &.half-height
+    position relative
+    top -200px
+    pointer-events none
+
+.great-with
+  display flex
+  gap 20px
+  align-items center
+  > div > a > img
+    max-height 40px
 
 .content-block
   display flex
@@ -248,6 +293,8 @@ export default {
   flex-wrap wrap
   justify-content space-between
   align-items center
+  &.no-padding
+    padding 0
   &.no-border
     border 0
   &.left
@@ -263,12 +310,16 @@ export default {
     .content
       width 100%
       max-width none
+  p
+    img
+      max-width: 100%;
+      height: auto;
 
   .image
     padding-right: 20px
   .content
     max-width: 60%
-    a
+    a.header-anchor
       display none
     h2
       padding-left: 15px
