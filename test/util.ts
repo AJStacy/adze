@@ -1,5 +1,5 @@
 import test from 'ava';
-import { leadingZeros, hrtime } from '../src/util';
+import { leadingZeros, hrtime } from '../src/env';
 
 global.ADZE_ENV = 'dev';
 
